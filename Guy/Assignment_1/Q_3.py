@@ -110,6 +110,8 @@ def main(args):
     ax2.add_patch(Rectangle((-10, -3), 20, 6, color='b', fill=False))
     ax2.plot([0,0], [0, 15], '-.', color='g')
     ax2.plot([0,50], [0, 0], '-.', color='g')
+    ax2.text(25,2, "X_rcs")
+    ax2.text(-12,8, "Y_rcs", rotation='vertical')
     plt.show()
     # ------------ find D, W, theta ------------
     obstacle_p_1 = laser_cartesian[0]

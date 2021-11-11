@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 import math
 import matplotlib.pyplot as plt
+import matplotlib.axes as axes
 from matplotlib.patches import Rectangle
 
 def parse_args():
@@ -67,12 +68,15 @@ def calc_angle_between_vectors(vec_a, vec_b):
     calculate the angle between two given vector
     :param vec_a: an array of size 2 (x,y)
     :param vec_b: an array of size 2 (x,y)
-    :return: return the angle in radians
+    :return: return the angle in degrees
     '''
     inner_prod = np.dot(vec_a, vec_b)
     norms = np.linalg.norm(vec_a) * np.linalg.norm(vec_b)
     rad = np.arccos(np.clip(inner_prod/norms, -1., 1.))
-    return rad
+    deg = np.rad2deg(rad)
+    if vec_a[1] > vec_b[1]:
+        deg = 360-deg
+    return deg
 
 def main(args):
     laser_scan = pd.read_csv(args.file_path, header=None)
@@ -89,9 +93,9 @@ def main(args):
             laser_cartesian.append([x,y])
     laser_cartesian = np.array(laser_cartesian)
     # plot the cartesian representation and the regular scan vector
-    f, (ax1, ax2) = plt.subplots(1, 2,  constrained_layout=True)
+    f, (ax1, ax2) = plt.subplots(1, 2)
     # plot regular representation to visualize the relevant angles
-    ax1.plot(np.arange(0,359), laser_mean_scan[laser_mean_scan>0])
+    ax1.scatter(np.arange(0,359), laser_mean_scan[laser_mean_scan>0])
     ax1.set_title('Relevant section of degrees')
     ax1.set_xlabel('Degrees')
     ax1.set_ylabel('Measured distance')
@@ -99,19 +103,20 @@ def main(args):
     ax1.set_ylim([0, np.max(np.abs(laser_mean_scan)) + 10])
 
     # plot the real world as the robot see's it
-    x_limit = np.max(np.abs(laser_cartesian[:,0]))
-    y_limit = np.max(np.abs(laser_cartesian[:,1]))
+    x_limit = np.round(np.max(np.abs(laser_cartesian[:,0])))
+    y_limit = np.round(np.max(np.abs(laser_cartesian[:,1])))
     ax2.plot(laser_cartesian[:, 0], laser_cartesian[:, 1], linewidth=5, color='k')
     ax2.set_title('Real world - Robot POW')
     ax2.set_xlabel('X_rcs')
     ax2.set_ylabel('Y_rcs')
-    ax2.set_xlim([-x_limit-10,x_limit + 10])
-    ax2.set_ylim([-y_limit-10,y_limit + 10])
-    ax2.add_patch(Rectangle((-10, -3), 20, 6, color='b', fill=False))
+    ax2.add_patch(Rectangle((-10, -2), 20, 4, color='b', fill=False, linewidth=2))
     ax2.plot([0,0], [0, 15], '-.', color='g')
-    ax2.plot([0,50], [0, 0], '-.', color='g')
+    ax2.plot([0,30], [0, 0], '-.', color='g')
     ax2.text(25,2, "X_rcs")
     ax2.text(-12,8, "Y_rcs", rotation='vertical')
+    ax2.set_xticks(np.arange(-x_limit-11,x_limit + 11 ,10))
+    ax2.set_yticks(np.arange(-y_limit-11,y_limit + 11 ,5))
+    plt.grid()
     plt.show()
     # ------------ find D, W, theta ------------
     obstacle_p_1 = laser_cartesian[0]
@@ -119,14 +124,19 @@ def main(args):
     W = np.linalg.norm(obstacle_p_1 - obstacle_p_2)
     print(f'Obstacle length is {W}')
     # to find theta and D, we are going to find P first
+    # P is the smallest values among the readings, to verify, we'll check the Euclidean distance
     dist_to_points = [np.linalg.norm([0,0] - laser_cartesian[i,:]) for i in range(laser_cartesian.shape[0])]
     P = laser_cartesian[np.argmin(dist_to_points), :]
     D = np.min(dist_to_points)
+    D_reading = np.min(laser_mean_scan[laser_mean_scan > 1])
+    assert (D - D_reading < 0.05), 'we have a problem with the distance calculation'
     # D, P = pnt2line((0, 0), obstacle_p_1, obstacle_p_2)
     print(f'The Distance to the obstacle "D" is {D}')
-    theta_rad = calc_angle_between_vectors([1,0], P)
-    theta_deg = np.rad2deg(theta_rad)
-    print(f'Theta is {theta_rad} in radians and {theta_deg} in degrees')
+    # the theta angle is the column number of the point P, to verify, we'll calculate the angle
+    theta_deg = calc_angle_between_vectors([1,0], P)
+    theta_reading = np.where(laser_mean_scan == D_reading)
+    assert (theta_reading - theta_deg < 0.05), 'we have a problem with the theta calculation'
+    print(f'Theta is {theta_deg} degrees')
     # ------------ find P coordinates ------------
     print(f'The closest point of the obstacle to the robot is {P}')
     # ------------ find P in the real world ------------

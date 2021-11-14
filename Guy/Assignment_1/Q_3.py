@@ -119,9 +119,13 @@ def main(args):
     plt.grid()
     plt.show()
     # ------------ find D, W, theta ------------
-    obstacle_p_1 = laser_cartesian[0]
-    obstacle_p_2 = laser_cartesian[-1]
-    W = np.linalg.norm(obstacle_p_1 - obstacle_p_2)
+    indices_of_obstacle = np.where(laser_mean_scan > 1)[0]
+    obstacle_1_d = laser_mean_scan[indices_of_obstacle[0]]
+    obstacle_2_d = laser_mean_scan[indices_of_obstacle[-1]]
+    angle_between_obstacle_points = indices_of_obstacle[-1] - indices_of_obstacle[0] + 1
+    W = (obstacle_1_d**2 + obstacle_2_d**2 - 2*obstacle_1_d*obstacle_2_d*np.cos(angle_between_obstacle_points))**0.5
+    # TODO - add the cosine sentence here
+    # W = np.linalg.norm(obstacle_p_1 - obstacle_p_2)
     print(f'Obstacle length is {W}')
     # to find theta and D, we are going to find P first
     # P is the smallest values among the readings, to verify, we'll check the Euclidean distance

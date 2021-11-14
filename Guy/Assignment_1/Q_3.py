@@ -119,24 +119,21 @@ def main(args):
     plt.grid()
     plt.show()
     # ------------ find D, W, theta ------------
-    obstacle_p_1 = laser_cartesian[0]
-    obstacle_p_2 = laser_cartesian[-1]
-    W = np.linalg.norm(obstacle_p_1 - obstacle_p_2)
+    indices_of_obstacle = np.where(laser_mean_scan > 1)[0]
+    obstacle_1_d = laser_mean_scan[indices_of_obstacle[0]]
+    obstacle_2_d = laser_mean_scan[indices_of_obstacle[-1]]
+    angle_between_obstacle_points = indices_of_obstacle[-1] - indices_of_obstacle[0] + 1
+    W = np.sqrt(obstacle_1_d**2 + obstacle_2_d**2 -
+         2*obstacle_1_d*obstacle_2_d*np.cos(np.deg2rad(angle_between_obstacle_points))
+         )
     print(f'Obstacle length is {W}')
     # to find theta and D, we are going to find P first
     # P is the smallest values among the readings, to verify, we'll check the Euclidean distance
-    dist_to_points = [np.linalg.norm([0,0] - laser_cartesian[i,:]) for i in range(laser_cartesian.shape[0])]
-    P = laser_cartesian[np.argmin(dist_to_points), :]
-    D = np.min(dist_to_points)
     D_reading = np.min(laser_mean_scan[laser_mean_scan > 1])
-    assert (D - D_reading < 0.05), 'we have a problem with the distance calculation'
-    # D, P = pnt2line((0, 0), obstacle_p_1, obstacle_p_2)
-    print(f'The Distance to the obstacle "D" is {D}')
-    # the theta angle is the column number of the point P, to verify, we'll calculate the angle
-    theta_deg = calc_angle_between_vectors([1,0], P)
-    theta_reading = np.where(laser_mean_scan == D_reading)
-    assert (theta_reading - theta_deg < 0.05), 'we have a problem with the theta calculation'
-    print(f'Theta is {theta_deg} degrees')
+    print(f'The Distance to the obstacle "D" is {D_reading}')
+    theta_reading = np.where(laser_mean_scan == D_reading)[0]
+    P = polar_to_cartesian(D_reading, theta_reading[0])
+    print(f'Theta is {theta_reading[0]} degrees')
     # ------------ find P coordinates ------------
     print(f'The closest point of the obstacle to the robot is {P}')
     # ------------ find P in the real world ------------
@@ -144,7 +141,7 @@ def main(args):
     x_0 = 30
     y_0 = 40
     psi_deg = 30
-    P_wcs = convert_to_wcs(P[0], P[1], psi_deg)
+    P_wcs = convert_to_wcs(P[0], P[1], np.deg2rad(psi_deg))
     print(f'Real world coordinates for P is ({P_wcs[0]+x_0},{P_wcs[1]+y_0})')
 
 

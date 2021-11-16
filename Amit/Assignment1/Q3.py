@@ -17,7 +17,7 @@ if __name__ == "__main__":
     meaningful_points = [x for x in mean_scans if x > 50]
     W = np.sqrt(meaningful_points[0] ** 2 + meaningful_points[-1] ** 2 - 2 *
                 meaningful_points[0]*meaningful_points[-1] *
-                np.cos(np.radians(len(meaningful_points))))
+                np.cos(np.radians(len(meaningful_points)-1)))
     D = np.min(meaningful_points)
     Theta = mean_scans.index(D)
     P = (D*np.cos(np.radians(Theta)), D*np.sin(np.radians(Theta)))

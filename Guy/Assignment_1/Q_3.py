@@ -122,7 +122,7 @@ def main(args):
     indices_of_obstacle = np.where(laser_mean_scan > 1)[0]
     obstacle_1_d = laser_mean_scan[indices_of_obstacle[0]]
     obstacle_2_d = laser_mean_scan[indices_of_obstacle[-1]]
-    angle_between_obstacle_points = indices_of_obstacle[-1] - indices_of_obstacle[0] + 1
+    angle_between_obstacle_points = indices_of_obstacle[-1] - indices_of_obstacle[0]
     W = np.sqrt(obstacle_1_d**2 + obstacle_2_d**2 -
          2*obstacle_1_d*obstacle_2_d*np.cos(np.deg2rad(angle_between_obstacle_points))
          )

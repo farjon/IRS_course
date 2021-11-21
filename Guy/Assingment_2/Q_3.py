@@ -8,7 +8,8 @@ from scipy.spatial.transform import Rotation as R
 
 # subsection 1
 path_to_bunny = os.path.join(os.getcwd(), 'bunny', 'Q3')
-bun_000_reading = o3d.io.read_point_cloud(os.path.join(path_to_bunny, 'bun000.ply'))
+bun_000_reading = o3d.io.read_point_cloud(
+    os.path.join(path_to_bunny, 'bun000.ply'))
 o3d.visualization.draw_geometries([bun_000_reading])
 
 # subsection 2
@@ -24,7 +25,7 @@ for i, line in enumerate(Lines):
         pcds += bunny_ply
     rot_deg = int(bunny.split('.')[0][-3:])
     R = bunny_ply.get_rotation_matrix_from_xyz((0, np.deg2rad(rot_deg), 0))
-    bunny_ply.rotate(R, center=(0,0,0))
+    bunny_ply.rotate(R, center=(0, 0, 0))
     if rot_deg == 45 or rot_deg == 315:
         bunny_ply.translate((tx, ty, tz))
     pcds += bunny_ply
@@ -41,11 +42,11 @@ object_size = np.sum((a-b)**2)
 sec_3_pcd = copy.deepcopy(pcds)
 xyz = np.asarray(sec_3_pcd.points)
 # RGB = np.asarray(sec_3_pcd.colors)
-x = xyz[:,0]
-y = xyz[:,1]
-z = xyz[:,2]
+x = xyz[:, 0]
+y = xyz[:, 1]
+z = xyz[:, 2]
 
-#XYZ ranges
+# XYZ ranges
 print("X:"+str(np.min(x))+" - "+str(np.max(x)))
 print("Y:"+str(np.min(y))+" - "+str(np.max(y)))
 print("Z:"+str(np.min(z))+" - "+str(np.max(z)))
@@ -55,7 +56,8 @@ ears_indices_y = np.asarray(np.where(xyz[:, 1] > 0.142))
 ears_indices_z = np.asarray(np.where(xyz[:, 2] < 0.01))
 ears_indices_intersect = np.intersect1d(ears_indices_x, ears_indices_y)
 ears_indices_intersect = np.intersect1d(ears_indices_intersect, ears_indices_z)
-body_indices = np.asarray(np.delete(np.arange(xyz.shape[0]), ears_indices_intersect))
+body_indices = np.asarray(
+    np.delete(np.arange(xyz.shape[0]), ears_indices_intersect))
 RGB = np.zeros_like(xyz)
 RGB[ears_indices_intersect, 0] = 255
 RGB[body_indices, 2] = 255

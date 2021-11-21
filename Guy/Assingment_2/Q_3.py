@@ -28,6 +28,7 @@ for i, line in enumerate(Lines):
     if rot_deg == 45 or rot_deg == 315:
         bunny_ply.translate((tx, ty, tz))
     pcds += bunny_ply
+pcds.estimate_normals()
 o3d.visualization.draw_geometries([pcds])
 
 aabb = pcds.get_axis_aligned_bounding_box()

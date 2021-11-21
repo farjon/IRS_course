@@ -28,14 +28,14 @@ for i, line in enumerate(Lines):
     if rot_deg == 45 or rot_deg == 315:
         bunny_ply.translate((tx, ty, tz))
     pcds += bunny_ply
-pcds.estimate_normals()
+# pcds.estimate_normals()
 o3d.visualization.draw_geometries([pcds])
 
 aabb = pcds.get_axis_aligned_bounding_box()
 a = aabb.get_max_bound()
 b = aabb.get_min_bound()
-object_size = np.sum((a-b)**2)
-
+object_size = np.multiply(np.abs(a-b))
+print(object_size)
 
 # section 3
 sec_3_pcd = copy.deepcopy(pcds)

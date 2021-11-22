@@ -24,7 +24,7 @@ for i, line in enumerate(Lines):
         pcds += bunny_ply
     rot_deg = int(bunny.split('.')[0][-3:])
     R = bunny_ply.get_rotation_matrix_from_xyz((0, np.deg2rad(rot_deg), 0))
-    bunny_plygit addd.rotate(R, center=(0,0,0))
+    bunny_ply.rotate(R, center=(0,0,0))
     if rot_deg == 45 or rot_deg == 315:
         bunny_ply.translate((tx, ty, tz))
     pcds += bunny_ply

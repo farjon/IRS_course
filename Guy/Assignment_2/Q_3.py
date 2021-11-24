@@ -10,7 +10,7 @@ from scipy.spatial.transform import Rotation as R
 path_to_bunny = os.path.join(os.getcwd(), 'bunny', 'Q3')
 bun_000_reading = o3d.io.read_point_cloud(
     os.path.join(path_to_bunny, 'bun000.ply'))
-o3d.visualization.draw_geometries([bun_000_reading])
+# o3d.visualization.draw_geometries([bun_000_reading])
 
 # subsection 2
 file1 = open(os.path.join(path_to_bunny, 'bun.txt'), 'r')
@@ -30,12 +30,12 @@ for i, line in enumerate(Lines):
         bunny_ply.translate((tx, ty, tz))
     pcds += bunny_ply
 # pcds.estimate_normals()
-o3d.visualization.draw_geometries([pcds])
+# o3d.visualization.draw_geometries([pcds])
 
 aabb = pcds.get_axis_aligned_bounding_box()
 a = aabb.get_max_bound()
 b = aabb.get_min_bound()
-object_size = np.multiply(np.abs(a-b))
+object_size = np.prod(np.abs(a-b))
 print(object_size)
 
 # section 3
@@ -52,8 +52,8 @@ print("Y:"+str(np.min(y))+" - "+str(np.max(y)))
 print("Z:"+str(np.min(z))+" - "+str(np.max(z)))
 
 ears_indices_x = np.asarray(np.where(xyz[:, 0] > -0.08))
-ears_indices_y = np.asarray(np.where(xyz[:, 1] > 0.142))
-ears_indices_z = np.asarray(np.where(xyz[:, 2] < 0.01))
+ears_indices_y = np.asarray(np.where(xyz[:, 1] > 0.138))
+ears_indices_z = np.asarray(np.where(xyz[:, 2] < 0.014))
 ears_indices_intersect = np.intersect1d(ears_indices_x, ears_indices_y)
 ears_indices_intersect = np.intersect1d(ears_indices_intersect, ears_indices_z)
 body_indices = np.asarray(

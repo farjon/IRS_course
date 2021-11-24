@@ -1,6 +1,7 @@
 import numpy as np
-
+from Guy.Assignment_3.constructe_grid import grid_world, Rewards
 np.random.seed(10)
+# ---------------- grid world attributes ----------------
 grid_rows = 3
 grid_cols = 4
 number_of_S = 12
@@ -10,63 +11,14 @@ obstacle_state = 5
 termination_pos = 10
 termination_neg = 11
 
-Rewards = np.ones(number_of_S) * -0.04
-Rewards[obstacle_state-1] = 0
-Rewards[termination_pos-1] = 1
-Rewards[termination_neg-1] = -1
-
-p_act = np.array([0.8, 0.2, 0, 0])
-
-help_mat_grid = np.zeros([grid_rows+2, grid_cols+2])
-index = 0
-for i in range(1, grid_cols+1):
-    for j in range(1, grid_rows+1):
-        index = index + 1
-        if index == obstacle_state:
-            continue
-        help_mat_grid[j,i] = index
-
-def check_cell(ind, cell, prob, prob_state_vector):
-    if cell == 0:
-        prob_state_vector[ind-1] = prob_state_vector[ind-1] + prob
-    else:
-        prob_state_vector[cell-1] = prob_state_vector[cell-1] + prob
-    return prob_state_vector
-
-
-def check_cells_probs(index, front_cell, right_cell, back_cell, left_cell):
-    prob_state_vector = np.zeros(number_of_S)
-    prob_state_vector = check_cell(index, front_cell, p_act[0], prob_state_vector)
-    prob_state_vector = check_cell(index, right_cell, p_act[1], prob_state_vector)
-    prob_state_vector = check_cell(index, back_cell, p_act[2], prob_state_vector)
-    prob_state_vector = check_cell(index, left_cell, p_act[3], prob_state_vector)
-    return prob_state_vector
-
-
-grid_world = np.zeros([number_of_S, number_of_S, number_of_A])
-index = 0
-for a in range(number_of_A):
-    for col in range(1, grid_cols + 1):
-        for row in range(1, grid_rows + 1):
-            index = index + 1
-            if obstacle_state == index or termination_neg == index or termination_pos == index:
-                continue
-            n_cell = int(help_mat_grid[row-1,col])
-            e_cell = int(help_mat_grid[row,col + 1])
-            s_cell = int(help_mat_grid[row + 1,col])
-            w_cell = int(help_mat_grid[row,col - 1])
-            if a == 0:
-                prob_state_vector = check_cells_probs(index, n_cell, e_cell, s_cell, w_cell)
-            elif a == 1:
-                prob_state_vector = check_cells_probs(index, e_cell, s_cell, w_cell, n_cell)
-            elif a == 2:
-                prob_state_vector = check_cells_probs(index, s_cell, w_cell, n_cell, e_cell)
-            elif a == 3:
-                prob_state_vector = check_cells_probs(index, w_cell, n_cell, e_cell, s_cell)
-            grid_world[index-1, :,a] = prob_state_vector
-    index = 0
 
 def step(state, action):
+    '''
+    a specific step function within an episode
+    :param state: current state
+    :param action:
+    :return:
+    '''
     done = False
     next_state_dist = grid_world[state, :, action]
     next_state = np.random.choice(number_of_S, 1, True, next_state_dist).item()
@@ -77,11 +29,10 @@ def step(state, action):
 
 def generate_episode(policy):
     '''
-
-    :param policy: a S x A matrix - the probability to choose action for each State
-    :return:
+    an episode generation function
+    :param policy: a S x A matrix - the probability to choose action for each state
+    :return: a complete episode from state state to termination
     '''
-    stop = 0
     current_state = start_state - 1
     episode = {
         'state': [],
@@ -102,15 +53,16 @@ def generate_episode(policy):
 
     return episode
 
-def calculate_gain(episode, discount_factor, Q, learning_rate):
+def calculate_gain(episode, discount_factor, Q, visits, learning_rate):
     '''
-
-    :param episode:
-    :param discount_factor:
+    calculate the gain of an episode, use either the visits matrix or the learning rate to to update the Q value
+    :param episode: a complete episode of state, actions, and rewards
+    :param discount_factor: how to address to future rewards
+    :param Q: Q-values for state-action pairs
+    :param visits: a matrix for storing the visits of state-action pairs
+    :param learning_rate:
     :return:
     '''
-    visits = np.zeros([number_of_S, number_of_A])
-
     for t in range(len(episode['state']) - 1):
         state_t = episode['state'][t]
         action_t = episode['action'][t]
@@ -120,10 +72,16 @@ def calculate_gain(episode, discount_factor, Q, learning_rate):
         for k in range(t, len(episode['state']) - 1):
             reward_k = episode['reward'][k]
             gain = gain + (discount_factor ** (k - t)) * reward_k
-        Q[state_t, action_t] = Q[state_t, action_t] + learning_rate * (gain - Q[state_t, action_t])
-    return Q
+        Q[state_t, action_t] = Q[state_t, action_t] + (1/visits[state_t, action_t]) * (gain - Q[state_t, action_t])
+    return Q, visits
 
 def epsilon_greedy(Q, epsilon):
+    '''
+
+    :param Q:
+    :param epsilon:
+    :return:
+    '''
     policy = np.zeros([number_of_S, number_of_A])
     for state in range(Q.shape[0]):
         if state+1 == obstacle_state or state+1 == termination_neg or state+1 == termination_pos:
@@ -138,17 +96,24 @@ def epsilon_greedy(Q, epsilon):
     return policy
 
 def monte_carlo_FV_GLIE(num_episodes, discount_factor, learning_rate):
+    '''
+    Solving a monte-carlo first visit GLIE algorithm
+    :param num_episodes: number of episode to learn from
+    :param discount_factor: the discount factor for future rewards during each episode
+    :param learning_rate: the learning rate between episodes
+    :return:
+    '''
+    visits = np.zeros([number_of_S, number_of_A])
     Q = np.zeros([number_of_S, number_of_A])
     for i in range(num_episodes):
         epsilon = 1 / np.sqrt(i+1)/10 + 1
         policy = epsilon_greedy(Q, epsilon)
         episode = generate_episode(policy)
-        Q = calculate_gain(episode, discount_factor, Q, learning_rate)
-        print(Q)
+        print(episode['state'])
+
+        Q, visits = calculate_gain(episode, discount_factor, Q, visits, learning_rate)
     policy_star = np.argmax(Q, axis=1)
-    # value_star = np.max(Q, axis=1)
     print(policy_star)
-    # print(value_star)
 
 def main():
     num_episodes = 30000

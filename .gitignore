@@ -1,3 +1,4 @@
 **/.idea/
 *.JPG
 *.ply
+**/__pycache__

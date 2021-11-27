@@ -1,6 +1,5 @@
 import numpy as np
 from Guy.Assignment_3.constructe_grid import grid_world, Rewards
-np.random.seed(10)
 # ---------------- grid world attributes ----------------
 grid_rows = 3
 grid_cols = 4
@@ -53,7 +52,7 @@ def generate_episode(policy):
 
     return episode
 
-def calculate_gain(episode, discount_factor, Q, visits, learning_rate):
+def calculate_gain(episode, discount_factor, Q, visits, learning_rate = 0):
     '''
     calculate the gain of an episode, use either the visits matrix or the learning rate to to update the Q value
     :param episode: a complete episode of state, actions, and rewards
@@ -77,17 +76,17 @@ def calculate_gain(episode, discount_factor, Q, visits, learning_rate):
 
 def epsilon_greedy(Q, epsilon):
     '''
-
-    :param Q:
-    :param epsilon:
-    :return:
+    Greedy in the Limit with Infinite Exploration implementation
+    :param Q: the current policy a SxA matrix stating which action to take in each state
+    :param epsilon: the exploration factor
+    :return: epsilon greedy policy
     '''
     policy = np.zeros([number_of_S, number_of_A])
     for state in range(Q.shape[0]):
         if state+1 == obstacle_state or state+1 == termination_neg or state+1 == termination_pos:
             continue
         else:
-            action_star = int(np.max(Q[state,:]))
+            action_star = np.argmax(Q[state,:])
         for act in range(Q.shape[1]):
             if act == action_star:
                 policy[state, act] = 1 - epsilon + (epsilon / Q.shape[1])
@@ -95,12 +94,11 @@ def epsilon_greedy(Q, epsilon):
                 policy[state, act] = epsilon / Q.shape[1]
     return policy
 
-def monte_carlo_FV_GLIE(num_episodes, discount_factor, learning_rate):
+def monte_carlo_FV_GLIE(num_episodes, discount_factor):
     '''
     Solving a monte-carlo first visit GLIE algorithm
     :param num_episodes: number of episode to learn from
     :param discount_factor: the discount factor for future rewards during each episode
-    :param learning_rate: the learning rate between episodes
     :return:
     '''
     visits = np.zeros([number_of_S, number_of_A])
@@ -111,12 +109,13 @@ def monte_carlo_FV_GLIE(num_episodes, discount_factor, learning_rate):
         episode = generate_episode(policy)
         print(episode['state'])
 
-        Q, visits = calculate_gain(episode, discount_factor, Q, visits, learning_rate)
+        Q, visits = calculate_gain(episode, discount_factor, Q, visits)
     policy_star = np.argmax(Q, axis=1)
     print(policy_star)
 
 def main():
-    num_episodes = 30000
+    np.random.seed(10)
+    num_episodes = 3000
     discount_factor = 0.9
     learning_rate = 0.0015
     monte_carlo_FV_GLIE(num_episodes, discount_factor, learning_rate)

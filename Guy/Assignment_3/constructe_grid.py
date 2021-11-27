@@ -17,7 +17,7 @@ Rewards[termination_pos-1] = 1
 Rewards[termination_neg-1] = -1
 
 # noisy-action distribution
-p_act = np.array([1, 0, 0, 0])
+p_act = np.array([0.8, 0.2, 0, 0])
 
 # using an help matrix to contain the world
 help_mat_grid = np.zeros([grid_rows+2, grid_cols+2])
